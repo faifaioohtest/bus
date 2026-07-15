@@ -491,6 +491,14 @@
     fetchAllStations();
     setInterval(fetchAllStations, 10000); 
   </script>
-
+<script>
+    // 註冊 Service Worker 讓 Android Chrome 彈出安裝提示
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js');
+      });
+    }
+  </script>
+</body>
 </body>
 </html>
