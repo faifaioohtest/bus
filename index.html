@@ -3,21 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>智能巴士站牌 + 天氣與時鐘</title>
-  <link rel="manifest" href="manifest.json">
   
-  <meta name="theme-color" content="#002244">
-  
+  <!-- PWA 與 App 相關設定 -->
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="巴士預報">
+  <meta name="theme-color" content="#002244">
+  <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.png">
 
-
+  <title>智能巴士站牌 + 天氣與時鐘</title>
   <style>
     * { box-sizing: border-box; }
 
-    /* 全域字體縮小魔法，維持 85% */
     html { font-size: 85%; }
 
     body { 
@@ -65,7 +64,9 @@
     .main-title h1 { margin: 0; font-size: 1.8em; color: #FADB00; text-shadow: 0 2px 5px rgba(0,0,0,0.5); }
     .main-title p { margin: 5px 0 0 0; color: #aaaaaa; font-size: 0.9em; }
 
-    .clock-container { flex: 1; display: flex; justify-content: flex-end; }
+    /* 🕒 加入時鐘與重整按鈕的排版 */
+    .clock-container { flex: 1; display: flex; justify-content: flex-end; align-items: center; gap: 15px; }
+    
     .realtime-clock {
       font-size: 2.2em; font-weight: 900; color: #FADB00; 
       background: rgba(0, 17, 34, 0.85); padding: 10px 25px;
@@ -79,7 +80,6 @@
       font-weight: normal; margin-bottom: 2px;
     }
     
-    /* 🌟 微調一：新增狀態指示燈 CSS */
     .status-indicator {
       font-size: 0.35em; margin-top: 6px; text-align: right;
       letter-spacing: 1px; font-weight: normal;
@@ -87,7 +87,21 @@
     .status-ok { color: #00ffaa; }
     .status-error { color: #ff5555; }
 
-    /* ===== 新增的按鈕分頁樣式 ===== */
+    /* 🔄 專屬的 Refresh 按鈕樣式 */
+    .refresh-btn {
+      background: rgba(0, 34, 68, 0.8); border: 2px solid #334455; color: #aaaaaa; 
+      border-radius: 50%; width: 48px; height: 48px; cursor: pointer; 
+      display: flex; justify-content: center; align-items: center;
+      transition: all 0.3s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      padding: 0; outline: none;
+    }
+    .refresh-btn:hover { background: #FADB00; color: #001122; border-color: #FADB00; }
+    .refresh-btn:active { transform: scale(0.9); }
+    /* 按鈕旋轉動畫 */
+    .spin svg { animation: spinIcon 1s linear infinite; }
+    @keyframes spinIcon { 100% { transform: rotate(360deg); } }
+
+    /* 按鈕分頁樣式 */
     .station-tabs {
       display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; 
       width: 100%; max-width: 1400px; margin-bottom: 20px;
@@ -103,22 +117,22 @@
       box-shadow: 0 0 15px rgba(250, 219, 0, 0.5);
     }
 
-    /* 修改原本的 boards-container，取消 Grid 雙排顯示，因為一次只顯示一個 */
     .boards-container {
       display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 900px;
     }
 
-    /* 隱藏非活動中的看板 */
     .eta-board { 
       display: none; 
       background: #001122; border: 3px solid #FADB00; border-radius: 12px; 
       padding: 20px 10px 20px 20px; width: 100%; box-shadow: 0 8px 20px rgba(0,0,0,0.5); 
     }
-    
-    /* 只有帶有 active class 的看板才會顯示 */
     .eta-board.active { display: block; }
     
-    .header { text-align: center; border-bottom: 2px solid #334455; padding-bottom: 12px; margin-bottom: 15px; margin-right: 10px; }
+    /* 調整 Header 讓站牌名稱與重整按鈕置中並排 */
+    .header { 
+      display: flex; justify-content: center; align-items: center; gap: 15px;
+      border-bottom: 2px solid #334455; padding-bottom: 12px; margin-bottom: 15px; margin-right: 10px; 
+    }
     .station-name { font-size: 1.7em; color: #FADB00; font-weight: bold; margin: 0; }
     
     .list-container { max-height: 480px; overflow-y: auto; padding-right: 10px; }
@@ -142,27 +156,19 @@
     .badge-ctb { background: #FADB00; color: #001122; }
     .badge-kmb { background: #ff3333; color: #fff; }
 
-   @media (max-width: 899px) {
+    /* 📱 手機版專屬設定：隱藏日期時間、縮小按鈕 */
+    @media (max-width: 899px) {
       .top-bar { flex-direction: column; justify-content: center; gap: 15px; }
       .weather-section { justify-content: center; }
-      .clock-container { justify-content: center; width: 100%; }
+      .clock-container { justify-content: center; width: 100%; display: flex; gap: 10px; }
       
-      /* 📱 手機版專屬設定：隱藏日期與時間 */
       .date-text, .time-text { display: none; }
       
-      /* 讓連線狀態的框框變小、字體放大並置中 */
-      .realtime-clock { 
-        padding: 8px 15px; 
-        font-size: 1.2em; /* 縮小基準字體 */
-        width: 100%; 
-      }
-      .status-indicator { 
-        margin-top: 0; /* 移除上方間距 */
-        text-align: center; 
-        font-size: 0.8em; /* 讓狀態字體大一點 */
-      }
+      .realtime-clock { padding: 8px 15px; font-size: 1.2em; flex: 1; }
+      .status-indicator { margin-top: 0; text-align: center; font-size: 0.8em; }
+      
+      .refresh-btn { width: 42px; height: 42px; }
     }
-
   </style>
 </head>
 <body>
@@ -178,14 +184,16 @@
       <p>智能出門儀表板</p>
     </div>
     
+    <!-- 🌟 在時鐘左邊加入「全局更新」按鈕 -->
     <div class="clock-container">
+      <button id="global-refresh-btn" class="refresh-btn" onclick="manualGlobalRefresh()">
+        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+      </button>
       <div id="realtime-clock" class="realtime-clock"></div>
     </div>
   </div>
 
-  <!-- 新增的按鈕容器 -->
   <div id="tabs-container" class="station-tabs"></div>
-  
   <div id="boards-container" class="boards-container"></div>
 
   <script>
@@ -250,14 +258,14 @@
         warnings.forEach(warn => {
           let imgFile = '', color = '#ffffff';
 
-         if (warn.name.includes('雷暴')) { imgFile = 'ts.gif'; color = '#ffcc00'; }
-          else if (warn.code.includes('WRAINA')) { imgFile = 'raina.gif'; color = '#ffcc00'; }  //黃雨
-          else if (warn.code.includes('WRAINR')) { imgFile = 'rainr.gif'; color = '#ff3333'; }  //紅雨
-          else if (warn.code.includes('WRAINB')) { imgFile = 'rainb.gif'; color = '#aaaaaa'; }  //黑雨
+          if (warn.name.includes('雷暴')) { imgFile = 'ts.gif'; color = '#ffcc00'; }
+          else if (warn.code.includes('WRAINA')) { imgFile = 'raina.gif'; color = '#ffcc00'; }  
+          else if (warn.code.includes('WRAINR')) { imgFile = 'rainr.gif'; color = '#ff3333'; }  
+          else if (warn.code.includes('WRAINB')) { imgFile = 'rainb.gif'; color = '#aaaaaa'; }  
           else if (warn.name.includes('寒冷')) { imgFile = 'cold.gif'; color = '#00ccff'; }
           else if (warn.name.includes('酷熱')) { imgFile = 'vhot.gif'; color = '#ff3333'; }
-          else if (warn.code.includes('WFIREY')) { imgFile = 'firey.gif'; color = '#ffcc00'; }  //黃色火災
-          else if (warn.code.includes('WFIRER')) { imgFile = 'firer.gif'; color = '#ff3333'; }//紅色火災
+          else if (warn.code.includes('WFIREY')) { imgFile = 'firey.gif'; color = '#ffcc00'; }  
+          else if (warn.code.includes('WFIRER')) { imgFile = 'firer.gif'; color = '#ff3333'; }
           else if (warn.name.includes('季候風')) { imgFile = 'sms.gif'; color = '#aaaaaa'; }
           else if (warn.name.includes('山泥傾瀉')) { imgFile = 'landslip.gif'; color = '#ffcc00'; }
           else if (warn.name.includes('水浸')) { imgFile = 'ntfl.gif'; color = '#00ccff'; }
@@ -268,7 +276,7 @@
           else if (warn.name.includes('八號') && warn.name.includes('西南')) { imgFile = 'tc8sw.gif'; color = '#ff3333'; }
           else if (warn.name.includes('八號') && warn.name.includes('東北')) { imgFile = 'tc8ne.gif'; color = '#ff3333'; }
           else if (warn.name.includes('八號') && warn.name.includes('東南')) { imgFile = 'tc8se.gif'; color = '#ff3333'; }
-          else if (warn.name.includes('八號')) { imgFile = 'tc8nw.gif'; color = '#ff3333'; } // 預設
+          else if (warn.name.includes('八號')) { imgFile = 'tc8nw.gif'; color = '#ff3333'; } 
           else if (warn.name.includes('九號')) { imgFile = 'tc9.gif'; color = '#ff3333'; }
           else if (warn.name.includes('十號')) { imgFile = 'tc10.gif'; color = '#ff3333'; }
           
@@ -288,7 +296,7 @@
     fetchWeatherWarnings();
     setInterval(fetchWeatherWarnings, 60000);
 
-    // 🕒 時鐘 (整合連線狀態)
+    // 🕒 時鐘 (結合隱藏用 class)
     function updateClock() {
       const now = new Date();
       const hours = String(now.getHours()).padStart(2, '0');
@@ -300,13 +308,13 @@
       document.getElementById('realtime-clock').innerHTML = `
         <div class="date-text">${year}年${month}月${date}日 (星期${days[now.getDay()]})</div>
         <div class="time-text">${hours}:${minutes}:${seconds}</div>
-        <div id="api-status" class="status-indicator status-ok">🟢 系統啟動中...</div>
+        <div id="api-status" class="status-indicator status-ok">🟢 系統正常</div>
       `;
     }
     updateClock();
     setInterval(updateClock, 1000);
 
-    // 🚌 巴士設定
+    // 🚌 巴士設定 (保留 9號線 的 excludeDest)
     const STATIONS = [
       {
         stationName: "山翠苑 / 東區醫院",
@@ -332,7 +340,7 @@
       {
         stationName: "筲箕灣巴士總站",
         routes: [
-          { route: '9', type: 'CTB', ctbStopId: '001207' , excludeDest: '筲箕灣' },
+          { route: '9', type: 'CTB', ctbStopId: '001207', excludeDest: '筲箕灣' },
         ]
       },
       {
@@ -340,27 +348,26 @@
         routes: [
           { route: '14', type: 'CTB', ctbStopId: '001316' },
         ]
+      },
+      {
+        stationName: "紅隧",
+        routes: [
+          { route: '118', type: 'JOINT', ctbStopId: '001476', kmbStopId: 'C564EDC91AFD7D04' },
+          //{ route: '111', type: 'JOINT', ctbStopId: '001475', kmbStopId: '11B2034DDF30617A' },
+          //{ route: '116', type: 'JOINT', ctbStopId: '001475', kmbStopId: '11B2034DDF30617A' },
+          //{ route: '107', type: 'JOINT', ctbStopId: '001475', kmbStopId: '11B2034DDF30617A' },
+          //{ route: '108', type: 'JOINT', ctbStopId: '001475', kmbStopId: '11B2034DDF30617A' },
+        ]
       }
     ];
 
-    // 新增：切換看板的函數 (已修復，移出 initBoards 之外)
+    // 切換看板分頁
     window.switchTab = function(selectedIndex) {
-      // 更新按鈕狀態
       document.querySelectorAll('.tab-btn').forEach((btn, index) => {
-        if (index === selectedIndex) {
-          btn.classList.add('active');
-        } else {
-          btn.classList.remove('active');
-        }
+        index === selectedIndex ? btn.classList.add('active') : btn.classList.remove('active');
       });
-
-      // 更新看板顯示狀態
       document.querySelectorAll('.eta-board').forEach((board, index) => {
-        if (index === selectedIndex) {
-          board.classList.add('active');
-        } else {
-          board.classList.remove('active');
-        }
+        index === selectedIndex ? board.classList.add('active') : board.classList.remove('active');
       });
     };
 
@@ -369,136 +376,161 @@
       const container = document.getElementById('boards-container');
       
       STATIONS.forEach((station, index) => {
-        // 動態生成分頁按鈕 (預設第一個啟用)
         const isActive = index === 0 ? 'active' : '';
         tabsContainer.insertAdjacentHTML('beforeend', `
-          <button class="tab-btn ${isActive}" onclick="switchTab(${index})">
-            ${station.stationName}
-          </button>
+          <button class="tab-btn ${isActive}" onclick="switchTab(${index})">${station.stationName}</button>
         `);
 
-        // 動態生成看板 (預設第一個顯示)
+        // 🌟 每個看板 Header 右側加入專屬的 Refresh 按鈕
         container.insertAdjacentHTML('beforeend', `
           <div class="eta-board ${isActive}" id="board-${index}">
-            <div class="header"><div class="station-name">${station.stationName}</div></div>
-            <div id="eta-list-${index}" class="list-container"><div class="no-data">正在整合數據...</div></div>
+            <div class="header">
+              <div class="station-name">${station.stationName}</div>
+              <button class="refresh-btn" id="refresh-board-${index}" onclick="fetchSingleBoard(${index})">
+                <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+              </button>
+            </div>
+            <div id="eta-list-${index}" class="list-container"><div class="no-data">正在載入數據...</div></div>
           </div>
         `);
       });
     }
 
-    // 🌟 核心過濾與狀態追蹤
-    async function fetchAllStations() {
-      let hasError = false; 
+    // 🌟 核心更新邏輯：重構為獨立獲取單一看板，方便按鈕獨立重整
+    async function fetchSingleBoard(index) {
+      const station = STATIONS[index];
+      const listContainer = document.getElementById(`eta-list-${index}`);
+      const btn = document.getElementById(`refresh-board-${index}`);
+      let hasError = false;
+      let allBuses = []; 
 
-      const stationPromises = STATIONS.map(async (station, index) => {
-        const listContainer = document.getElementById(`eta-list-${index}`);
-        let allBuses = []; 
+      // 按下時加上旋轉動畫
+      if (btn) btn.classList.add('spin');
 
-        const promises = station.routes.map(async (config) => {
-          try {
-            if (config.type === 'CTB' || config.type === 'JOINT') {
-              const res = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/eta/CTB/${config.ctbStopId}/${config.route}`);
-              if (!res.ok) throw new Error();
-              const json = await res.json();
-              if (json.data) {
-                json.data.filter(b => b.eta && b.eta !== "").forEach(b => {
-                  // 🌟 新增：如果設定了 excludeDest，且目的地包含該字眼，就跳過不顯示
-                  if (config.excludeDest && b.dest_tc.includes(config.excludeDest)) return;
-                  allBuses.push({ route: config.route, company: 'CTB', eta: b.eta, dest: b.dest_tc });
-                });
-              }
+      const promises = station.routes.map(async (config) => {
+        try {
+          if (config.type === 'CTB' || config.type === 'JOINT') {
+            const res = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/eta/CTB/${config.ctbStopId}/${config.route}`);
+            if (!res.ok) throw new Error();
+            const json = await res.json();
+            if (json.data) {
+              json.data.filter(b => b.eta && b.eta !== "").forEach(b => {
+                if (config.excludeDest && b.dest_tc.includes(config.excludeDest)) return;
+                allBuses.push({ route: config.route, company: 'CTB', eta: b.eta, dest: b.dest_tc });
+              });
             }
-            if (config.type === 'JOINT' && config.kmbStopId) {
-              const kmbRes = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/stop-eta/${config.kmbStopId}`);
-              if (!kmbRes.ok) throw new Error();
-              const kmbJson = await kmbRes.json();
-              if (kmbJson.data) {
-                kmbJson.data.filter(b => b.route === config.route && b.eta && b.eta !== "").forEach(b => {
-                  // 🌟 新增：九巴同樣支援目的地過濾
-                  if (config.excludeDest && b.dest_tc.includes(config.excludeDest)) return;
-                  allBuses.push({ route: config.route, company: 'KMB', eta: b.eta, dest: b.dest_tc });
-                });
-              }
+          }
+          if (config.type === 'JOINT' && config.kmbStopId) {
+            const kmbRes = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/stop-eta/${config.kmbStopId}`);
+            if (!kmbRes.ok) throw new Error();
+            const kmbJson = await kmbRes.json();
+            if (kmbJson.data) {
+              kmbJson.data.filter(b => b.route === config.route && b.eta && b.eta !== "").forEach(b => {
+                if (config.excludeDest && b.dest_tc.includes(config.excludeDest)) return;
+                allBuses.push({ route: config.route, company: 'KMB', eta: b.eta, dest: b.dest_tc });
+              });
             }
-          } catch (err) { hasError = true; }
-        });
-
-        await Promise.all(promises);
-        
-        const now = new Date();
-        
-        // 過濾無效時間及過去超過3分鐘的車
-        allBuses = allBuses.filter(bus => {
-          const etaTime = new Date(bus.eta).getTime();
-          if (isNaN(etaTime)) return false;
-          return Math.floor((etaTime - now.getTime()) / 60000) >= -3; 
-        });
-
-        allBuses.sort((a, b) => new Date(a.eta) - new Date(b.eta));
-
-        if (allBuses.length === 0) {
-          listContainer.innerHTML = hasError ? '<div class="no-data" style="color:#aaaaaa;">🔴 數據更新失敗</div>' : '<div class="no-data">暫無班次資料</div>';
-          return;
-        }
-
-        listContainer.innerHTML = '';
-        let routeCount = {}, seenSignatures = new Set(); 
-
-        allBuses.forEach((bus) => {
-          let sig = `${bus.route}_${bus.eta}`;
-          if (seenSignatures.has(sig)) return; seenSignatures.add(sig);
-          if (!routeCount[bus.route]) routeCount[bus.route] = 0; 
-          if (routeCount[bus.route] >= 4) return; routeCount[bus.route]++; 
-
-          const etaDate = new Date(bus.eta);
-          const diffMins = Math.floor((etaDate - now) / 60000);
-          
-          let displayTime = diffMins <= 0 ? "即將到達" : `${diffMins} 分鐘`;
-          let timeColor = diffMins <= 0 ? "#ff5555" : "#00ffaa";
-          let hours = String(etaDate.getHours()).padStart(2, '0');
-          let minutes = String(etaDate.getMinutes()).padStart(2, '0');
-
-          let compBadge = bus.company === 'CTB' ? '<span class="company-badge badge-ctb">城巴</span>' : '<span class="company-badge badge-kmb">九巴</span>';
-          let routeClass = (bus.route.length >= 3 && (bus.route.startsWith('1') || bus.route.startsWith('6'))) ? "route-badge route-red" : "route-badge";
-
-          listContainer.insertAdjacentHTML('beforeend', `
-            <div class="bus-item">
-              <div class="bus-info">
-                <div class="${routeClass}">${bus.route}</div>
-                <div class="dest-text"><div>往 ${bus.dest}</div><div>${compBadge}</div></div>
-              </div>
-              <div class="eta-container">
-                <div class="abs-time">${hours}:${minutes}</div>
-                <div class="eta-time" style="color: ${timeColor};">${displayTime}</div>
-              </div>
-            </div>
-          `);
-        });
+          }
+        } catch (err) { hasError = true; }
       });
 
-      await Promise.all(stationPromises);
+      await Promise.all(promises);
+      const now = new Date();
+      
+      allBuses = allBuses.filter(bus => {
+        const etaTime = new Date(bus.eta).getTime();
+        if (isNaN(etaTime)) return false;
+        return Math.floor((etaTime - now.getTime()) / 60000) >= -3; 
+      });
+
+      allBuses.sort((a, b) => new Date(a.eta) - new Date(b.eta));
+
+      if (allBuses.length === 0) {
+        listContainer.innerHTML = hasError ? '<div class="no-data" style="color:#aaaaaa;">🔴 數據更新失敗</div>' : '<div class="no-data">暫無班次資料</div>';
+        if (btn) btn.classList.remove('spin');
+        return hasError;
+      }
+
+      listContainer.innerHTML = '';
+      let routeCount = {}, seenSignatures = new Set(); 
+
+      allBuses.forEach((bus) => {
+        let sig = `${bus.route}_${bus.eta}`;
+        if (seenSignatures.has(sig)) return; seenSignatures.add(sig);
+        if (!routeCount[bus.route]) routeCount[bus.route] = 0; 
+        if (routeCount[bus.route] >= 4) return; routeCount[bus.route]++; 
+
+        const etaDate = new Date(bus.eta);
+        const diffMins = Math.floor((etaDate - now) / 60000);
+        let displayTime = diffMins <= 0 ? "即將到達" : `${diffMins} 分鐘`;
+        let timeColor = diffMins <= 0 ? "#ff5555" : "#00ffaa";
+        let hours = String(etaDate.getHours()).padStart(2, '0');
+        let minutes = String(etaDate.getMinutes()).padStart(2, '0');
+
+        let compBadge = bus.company === 'CTB' ? '<span class="company-badge badge-ctb">城巴</span>' : '<span class="company-badge badge-kmb">九巴</span>';
+        let routeClass = (bus.route.length >= 3 && (bus.route.startsWith('1') || bus.route.startsWith('6'))) ? "route-badge route-red" : "route-badge";
+
+        listContainer.insertAdjacentHTML('beforeend', `
+          <div class="bus-item">
+            <div class="bus-info">
+              <div class="${routeClass}">${bus.route}</div>
+              <div class="dest-text"><div>往 ${bus.dest}</div><div>${compBadge}</div></div>
+            </div>
+            <div class="eta-container">
+              <div class="abs-time">${hours}:${minutes}</div>
+              <div class="eta-time" style="color: ${timeColor};">${displayTime}</div>
+            </div>
+          </div>
+        `);
+      });
+
+      // 載入完成移除旋轉動畫
+      if (btn) btn.classList.remove('spin');
+      return hasError;
+    }
+
+    // 更新全部看板
+    async function fetchAllStations() {
+      let globalError = false;
+      const promises = STATIONS.map(async (s, index) => {
+        const hasErr = await fetchSingleBoard(index);
+        if (hasErr) globalError = true;
+      });
+      await Promise.all(promises);
       
       const statusDiv = document.getElementById('api-status');
       if (statusDiv) {
         const timeStr = new Date().toLocaleTimeString('zh-HK', { hour12: false });
-        statusDiv.className = hasError ? 'status-indicator status-error' : 'status-indicator status-ok';
-        statusDiv.innerHTML = hasError ? `🔴 部分數據延遲 (${timeStr})` : `🟢 實時同步中 (${timeStr})`;
+        statusDiv.className = globalError ? 'status-indicator status-error' : 'status-indicator status-ok';
+        statusDiv.innerHTML = globalError ? `🔴 部分數據延遲 (${timeStr})` : `🟢 實時同步中 (${timeStr})`;
       }
+    }
+
+    // 🌟 全局手動重整 (天氣 + 全部看板)
+    async function manualGlobalRefresh() {
+      const btn = document.getElementById('global-refresh-btn');
+      if (btn) btn.classList.add('spin');
+      
+      await Promise.all([
+        fetchCurrentWeather(),
+        fetchWeatherWarnings(),
+        fetchAllStations()
+      ]);
+      
+      if (btn) btn.classList.remove('spin');
     }
 
     initBoards();
     fetchAllStations();
-    setInterval(fetchAllStations, 10000); 
-  </script>
-<script>
-    // 註冊 Service Worker 讓 Android Chrome 彈出安裝提示
+    setInterval(fetchAllStations, 10000); // 維持每10秒背景自動更新一次
+
+    // 註冊 Service Worker 讓 Android Chrome 辨識為 App
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js');
+        navigator.serviceWorker.register('./sw.js').catch(()=>{});
       });
     }
   </script>
-</body>
+
 </body>
 </html>
