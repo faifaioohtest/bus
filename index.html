@@ -128,11 +128,25 @@
     }
     .eta-board.active { display: block; }
     
-    /* 調整 Header 讓站牌名稱與重整按鈕置中並排 */
+  /* 📌 讓站名與重整按鈕釘死在頂部，並加上 70% 透明與毛玻璃特效 */
     .header { 
       display: flex; justify-content: center; align-items: center; gap: 15px;
       border-bottom: 2px solid #334455; padding-bottom: 12px; margin-bottom: 15px; margin-right: 10px; 
+      
+      /* 吸頂魔法 */
+      position: sticky; 
+      top: 0; 
+      z-index: 100; 
+      padding-top: 10px; 
+      
+      /* 🌟 70% 透明度 (0.7) 的深藍色背景 */
+      background-color: rgba(0, 17, 34, 0.7); 
+      
+      /* 🌟 毛玻璃模糊特效 (讓透上來的字體模糊，保持標題清晰) */
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px); /* 專為 Safari/iOS 支援 */
     }
+
     .station-name { font-size: 1.7em; color: #FADB00; font-weight: bold; margin: 0; }
     
     //.list-container { max-height: 480px; overflow-y: auto; padding-right: 10px; }
